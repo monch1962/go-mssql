@@ -4,6 +4,9 @@ user: "sa"
 password: "reallyStrongPwd123"
 database: "master"
 
+iterations: 10
+concurrency: 2
+
 sqls:
   - SELECT @@version
   - SELECT table_schema AS [schema], table_name AS [table_name] FROM information_schema.tables ORDER BY table_name

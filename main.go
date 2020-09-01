@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/remeh/sizedwaitgroup"
 )
 
 var db *sql.DB
@@ -32,15 +33,17 @@ type SQLs struct {
 
 //YamlConfig should conform to structure of database.yaml
 type YamlConfig struct {
-	Server   string
-	Port     int
-	User     string
-	Password string
-	Database string
-	SQLs     []string
+	Server      string
+	Port        int
+	User        string
+	Password    string
+	Database    string
+	Iterations  int
+	Concurrency int
+	SQLs        []string
 }
 
-func executeSQL(db *sql.DB, tsql string) (int, time.Duration, error) {
+func executeSQL(db *sql.DB, tsql string) (int, time.Time, time.Duration, error) {
 
 	ctx := context.Background()
 	var err error
@@ -51,7 +54,7 @@ func executeSQL(db *sql.DB, tsql string) (int, time.Duration, error) {
 
 	if db == nil {
 		err = errors.New("db is nil")
-		return 0, time.Since(time.Now()), err
+		return 0, time.Now(), time.Since(time.Now()), err
 	}
 
 	starttime := time.Now()
@@ -60,7 +63,7 @@ func executeSQL(db *sql.DB, tsql string) (int, time.Duration, error) {
 	endtime := time.Since(starttime)
 	if err != nil {
 		fmt.Println(err)
-		return 0, time.Since(time.Now()), err
+		return 0, time.Now(), time.Since(time.Now()), err
 	}
 	defer rows.Close()
 
@@ -68,7 +71,7 @@ func executeSQL(db *sql.DB, tsql string) (int, time.Duration, error) {
 	for rows.Next() {
 		count = count + 1
 	}
-	return count, endtime, nil
+	return count, starttime, endtime, nil
 }
 
 func readYAML(filename string) YamlConfig {
@@ -86,12 +89,12 @@ func readYAML(filename string) YamlConfig {
 
 func main() {
 	yamlMap := readYAML("database.yaml")
-	log.Printf("%#+v", yamlMap)
-	log.Printf("%v", yamlMap.Database)
+	//log.Printf("%#+v", yamlMap)
+	//log.Printf("%v", yamlMap.Database)
 
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
 		yamlMap.Server, yamlMap.User, yamlMap.Password, yamlMap.Port, yamlMap.Database)
-	fmt.Println(connString)
+	//log.Println(connString)
 
 	db, err := sql.Open("mssql", connString)
 	if err != nil {
@@ -102,14 +105,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Printf("Connected to database\n")
+	log.Printf("Connected to database\n")
 
-	for _, sql := range yamlMap.SQLs {
-		records, duration, err := executeSQL(db, sql)
-		if err != nil {
-			fmt.Println(err)
-			log.Fatal("Error executing SQL statement", err.Error())
+	CsvDelimiter := "~"
+	fmt.Println("row" + CsvDelimiter + "duration_ms" + CsvDelimiter + "records" + CsvDelimiter + "sql")
+
+	wg := sizedwaitgroup.New(yamlMap.Concurrency)
+
+	for j := 0; j < yamlMap.Iterations; j++ {
+		for i, sql := range yamlMap.SQLs {
+			records, starttime, duration, err := executeSQL(db, sql)
+			if err != nil {
+				log.Println(err)
+				log.Fatal("Error executing SQL statement", err.Error())
+			}
+			//fmt.Printf("SQL statement '%s' executed correctly in %d microseconds, and returned %d records\n", sql, duration.Microseconds(), records)
+			fmt.Printf("%d%s%v%s%d%s%d%s%v\n", i, CsvDelimiter, starttime, CsvDelimiter, duration.Microseconds(), CsvDelimiter, records, CsvDelimiter, sql)
 		}
-		fmt.Printf("SQL statement '%s' executed correctly in %d microseconds, and returned %d records\n", sql, duration.Microseconds(), records)
 	}
+	wg.Wait()
 }
