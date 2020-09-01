@@ -7,6 +7,16 @@ This is a slightly unusual MS-SQL Server client in that you configure your conne
 - number of records returned
 - SQL statement
 
-Within the YAML file you can also request to iterate through the defined SQL statements multiple times, as well as specify the concurrency (i.e. how many SQL statements to be executing simultaneously)
+Within the YAML file you can also request to iterate through the defined SQL statements multiple times, as well as specify the concurrency (i.e. how many SQL statements to be executing simultaneously).
 
-This makes it a good fit for highly-specific tasks such as benchmarking performance and latency, which is the reason I created it in the first place. The intended use case is to run it from different PCs over different network links, and compare the latencies.
+To run it, all you need are 2 files: the compiled Go executable and the `database.yaml` file, which can be tweaked for your specific environment and use case.
+
+This makes it a good fit for highly-specific tasks such as benchmarking response times and latency from end-user systems, which is the reason I created it in the first place. The intended use case is to run it from different PCs over different network links, and compare the latencies. This information can then be used to inform possible infrastructure upgrades.
+
+## Run as executable
+`$ go build`
+
+`$ main > results.csv`
+
+## Run as Docker container
+...
