@@ -3,38 +3,48 @@
 # Add steps that test, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/go
 
+
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
+resources:
+- repo: self
 
 variables:
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  GOROOT: '/usr/local/go1.14' # Go installation path
-  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+  # Container registry service connection established during pipeline creation
+  #dockerRegistryServiceConnection: '36284702-7f77-4551-afdb-ff2e418b3875'
+  imageRepository: 'go-restapi'
+  #containerRegistry: 'ffcontainers.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  #tag: '$(Build.BuildId)'
 
-steps:
-- script: |
-    ls /usr/local
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    shopt -s extglob
-    shopt -s dotglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-  displayName: 'Set up the Go workspace'
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
 
-- script: |
-    go version
-    go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go build -v .
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies, then build'
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: GoTool@0
+      inputs:
+        version: '1.14.1'
+    - task: Go@0
+      inputs:
+        command: 'get'
+        arguments: '-v -d'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+    - task: Go@0
+      inputs:
+        command: 'build'
+        arguments: '-v -o api'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+    - task: Go@0
+      inputs:
+        command: 'test'
+        arguments: '-v ./...'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
