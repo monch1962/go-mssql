@@ -1,0 +1,9 @@
+server: "localhost"
+port: 1433
+user: "sa"
+password: "reallyStrongPwd123"
+database: "master"
+
+sqls:
+  - SELECT @@version
+  - SELECT table_schema AS [schema], table_name AS [table_name] FROM information_schema.tables ORDER BY table_name
