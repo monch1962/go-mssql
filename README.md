@@ -20,3 +20,10 @@ This makes it a good fit for highly-specific tasks such as benchmarking response
 
 ## Run as Docker container
 ...
+
+
+## To test within Docker
+To spin up a local MS SQL Server instance inside Docker
+`$ docker pull mcr.microsoft.com/mssql/server:2019-latest`
+
+`$ docker run -d --name sql_server_demo -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=reallyStrongPwd123' -p 1433:1433 mcr.microsoft.com/mssql/server:2019-latest`
