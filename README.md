@@ -16,9 +16,15 @@ To run it, all you need are 2 files: the compiled Go executable and the `databas
 This makes it a good fit for highly-specific tasks such as benchmarking response times and latency from end-user systems, which is the reason I created it in the first place. The intended use case is to run it from different PCs over different network links, and compare the latencies. This information can then be used to inform possible infrastructure upgrades.
 
 ## Run as executable
-`$ go build`
+Use one of:
+`$ make local`
+`$ make windows`
+`$ make linux`
+`$ make mac`
+depending on which OS you want to compile for
 
-`$ ./sqlclient > results.csv`
+Then to run it:
+`$ ./bin/sql-client > results.csv`
 
 ## Run as Docker container
 ...
