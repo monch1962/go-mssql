@@ -14,8 +14,11 @@ func TestExecuteSQL(t *testing.T) {
 	}
 	defer db.Close()
 
-	result := sqlmock.NewResult(0,1)
-	mock.ExpectExec("SELECT @@version").WillReturnResult(result)
+	// Just generate some random result - don't really care what it is...
+	result := sqlmock.NewRows([]string{"id", "langcode", "title", "link__uri", "view_sidemenu"}).
+        AddRow(1, "en", "enTitle", "/en-link", "0").
+        AddRow(2, "en", "enTitle2", "/en-link2", "0")
+	mock.ExpectQuery("SELECT @@version").WillReturnRows(result)
 
 	row,startTime,duration,err := executeSQL(db, "SELECT @@version")
 	if err != nil {
