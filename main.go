@@ -110,18 +110,22 @@ func main() {
 	CsvDelimiter := "~"
 	fmt.Println("row" + CsvDelimiter + "startTime" + CsvDelimiter + "duration_ms" + CsvDelimiter + "records" + CsvDelimiter + "sql")
 
-	wg := sizedwaitgroup.New(yamlMap.Concurrency)
+	swg := sizedwaitgroup.New(yamlMap.Concurrency)
 
-	for j := 0; j < yamlMap.Iterations; j++ {
+	for iteration := 0; iteration < yamlMap.Iterations; iteration++ {
 		for i, sql := range yamlMap.SQLs {
-			records, starttime, duration, err := executeSQL(db, sql)
-			if err != nil {
-				log.Println(err)
-				log.Fatal("Error executing SQL statement", err.Error())
-			}
-			//fmt.Printf("SQL statement '%s' executed correctly in %d microseconds, and returned %d records\n", sql, duration.Microseconds(), records)
-			fmt.Printf("%d%s%v%s%d%s%d%s%v\n", i, CsvDelimiter, starttime, CsvDelimiter, duration.Microseconds(), CsvDelimiter, records, CsvDelimiter, sql)
+			swg.Add()
+			go func(i int, sql string) {
+				defer swg.Done()
+				records, starttime, duration, err := executeSQL(db, sql)
+				if err != nil {
+					log.Println(err)
+					log.Fatal("Error executing SQL statement", err.Error())
+				}
+				//fmt.Printf("SQL statement '%s' executed correctly in %d microseconds, and returned %d records\n", sql, duration.Microseconds(), records)
+				fmt.Printf("%d%s%v%s%d%s%d%s%v\n", i, CsvDelimiter, starttime, CsvDelimiter, duration.Microseconds(), CsvDelimiter, records, CsvDelimiter, sql)
+			}(i, sql)
 		}
 	}
-	wg.Wait()
+	swg.Wait()
 }
