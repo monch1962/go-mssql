@@ -108,7 +108,7 @@ func main() {
 	log.Printf("Connected to database\n")
 
 	CsvDelimiter := "~"
-	fmt.Println("row" + CsvDelimiter + "startTime" + CsvDelimiter + "duration_ms" + CsvDelimiter + "records" + CsvDelimiter + "sql")
+	fmt.Println("row" + CsvDelimiter + "startTime" + CsvDelimiter + "durationMicroseconds" + CsvDelimiter + "recordsReturned" + CsvDelimiter + "sql")
 
 	swg := sizedwaitgroup.New(yamlMap.Concurrency)
 
