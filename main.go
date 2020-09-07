@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -88,7 +89,14 @@ func readYAML(filename string) YamlConfig {
 }
 
 func main() {
-	yamlMap := readYAML("database.yaml")
+	var yamlFile = "database.yaml"
+	yamlFileFlag := flag.String("yaml", "database.yaml", "YAML file containing connection details & SQL data")
+	flag.Parse()
+	if *yamlFileFlag != "" {
+		yamlFile = *yamlFileFlag
+	}
+	//yamlMap := readYAML("database.yaml")
+	yamlMap := readYAML(yamlFile)
 	//log.Printf("%#+v", yamlMap)
 	//log.Printf("%v", yamlMap.Database)
 
