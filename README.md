@@ -5,6 +5,7 @@
 # go-mssql
 This is a slightly unusual MS-SQL Server client in that you configure your connection details & the SQL statements you want to execute inside a YAML file. Running the app will then connect to that SQL Server and execute those statements. You will then get the following data returned in CSV format:
 - statement ID
+- time SQL request was sent
 - response time in microseconds
 - number of records returned
 - SQL statement
